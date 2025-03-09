@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "VTuber: Pump.Fun Live Streaming",
+    "version": "0.0.0.2",
+    "description": "Enables live streaming of Pump.Fun coins",
+    "content_scripts": [
+        {
+            "matches": ["*://pump.fun/*"],
+            "js": ["content.js"]
+        }
+    ]
+}
