@@ -1,3 +1,6 @@
+// Add a global variable at the top of your script
+let isInsertingBoardStreams = false;
+
 // Function to check URL and load iframe if condition is met
 function checkAndLoadIframe() {
     // Check if the iframe already exists
@@ -103,6 +106,15 @@ function checkAndLoadIframe() {
 }   
 
 function loadBoardStreams() {
+    // Check if our streams container already exists or if we're in the process of inserting one
+    if (document.querySelector('#pump-fun-streams-container') || isInsertingBoardStreams) {
+        console.log('Streams carousel already exists or is being inserted, skipping creation');
+        return;
+    }
+
+    // Set the flag to indicate we're now working on inserting a carousel
+    isInsertingBoardStreams = true;
+    
     // Create live streams carousel
     const loadingImg = document.createElement("img");
     loadingImg.id = 'pump-fun-board';
@@ -121,6 +133,7 @@ function loadBoardStreams() {
     // Create container div
     const streamsContainer = document.createElement('div');
     streamsContainer.className = 'flex max-w-full flex-col items-center justify-start gap-4 overflow-hidden md:flex-row md:gap-6';
+    streamsContainer.id = 'pump-fun-streams-container';
     
     const carouselContainer = document.createElement('div');
     carouselContainer.id = 'streams-carousel-container';
@@ -133,9 +146,9 @@ function loadBoardStreams() {
     headerDiv.className = 'jsx-a93ea0ccb11df76e mx-1 mb-2 flex items-center justify-between';
     
     const header = document.createElement('h2');
-    header.className = 'jsx-a93ea0ccb11df76e font-light text-green-300 md:text-lg';
+    header.className = 'font-semibold text-white md:text-lg';
     header.id = 'pump-fun-iframe';
-    header.textContent = 'Live Streams';
+    header.textContent = 'live streams';
     
     headerDiv.appendChild(header);
     section.appendChild(headerDiv);
@@ -200,11 +213,42 @@ function loadBoardStreams() {
     carouselContainer.appendChild(section);
     streamsContainer.appendChild(carouselContainer);
 
-    // Insert the streams container before the existing carousel
-    const existingCarousel = document.querySelector('.flex.max-w-full.flex-col');
-    if (existingCarousel) {
-        existingCarousel.parentNode.insertBefore(streamsContainer, existingCarousel);
-    }
+    // In the setTimeout callback, make sure to reset the flag
+    setTimeout(() => {
+        // Target the specific carousel container by ID instead of generic class
+        const trendingCarousel = document.querySelector('#carousel-container');
+        
+        try {
+            if (trendingCarousel) {
+                // Insert before the trending carousel (not inside it)
+                trendingCarousel.parentNode.insertBefore(streamsContainer, trendingCarousel);
+                console.log('Streams carousel inserted before trending carousel');
+            } else {
+                // Fallback to finding common containers if the carousel isn't found
+                const mainContent = document.querySelector('main') || 
+                                   document.querySelector('.page-content') ||
+                                   document.querySelector('#root > div');
+                
+                if (mainContent) {
+                    const firstChild = mainContent.firstElementChild;
+                    if (firstChild) {
+                        mainContent.insertBefore(streamsContainer, firstChild);
+                        console.log('Streams carousel inserted at top of main content');
+                    } else {
+                        mainContent.appendChild(streamsContainer);
+                        console.log('Streams carousel appended to main content');
+                    }
+                } else {
+                    console.log('Could not find a suitable insertion point for streams carousel');
+                }
+            }
+        } catch (error) {
+            console.error('Error inserting streams carousel:', error);
+        } finally {
+            // Always reset the flag when done, whether successful or not
+            isInsertingBoardStreams = false;
+        }
+    }, 1000); // Wait 1 second for page elements to load
 }
 
 // Check URL on page load   
@@ -212,6 +256,6 @@ window.addEventListener("load", checkAndLoadIframe);
 
 // Check URL on history change
 window.addEventListener("popstate", checkAndLoadIframe);
-
 // Optionally, use setInterval to check URL periodically
 setInterval(checkAndLoadIframe, 1000);
+
